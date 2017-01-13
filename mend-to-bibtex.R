@@ -29,10 +29,10 @@
 
 
 ## Remember to empty the trash of mendeley
-MendeleySQL <- "mend.sqlite"
-BibTeXFile <- "library-fixed.bib"
+MendeleySQL <- "affairsonly@gmail.com@www.mendeley.com.sqlite"
+BibTeXFile <- "library.bib"
 out <- "new-library.bib" ## the new bibtex file that will be created
-tmpFilePaths <- "/home/ramon/tmp/mend" ## A temporary directory for
+tmpFilePaths <- "mend" ## A temporary directory for
                                        ## placing renamed files.
 
 source("sqlite-bibtex-functions.R")
@@ -58,7 +58,7 @@ bibfile2 <- addInfoToBibTex(bibfile, res)
 ## Fix file names: nothing longer than maxlength and no spaces or special
 ## chars in in file names.
 bibfileFileFixed <- fixFileNames(bibfile2, tmpFilePaths)
-
+# bibfileFileFixed <- bibfile2
 
 jabrefGr <- jabrefGroups(con, res)
 ## If you want to see what it looks like

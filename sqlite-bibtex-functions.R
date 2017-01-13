@@ -178,7 +178,7 @@ getBibKey <- function(x) {
 
 myBibtexReaderandCheck <- function(file) {
     cat("\n Starting readLines for bibtex file\n")
-    x <- readLines(con = file)
+    x <- readLines(con = file, encoding = "UTF-8")
     cat("\n Done with  readLines for bibtex file\n")
     startEntry <- "^@"
     endEntry <- "^}$"
@@ -200,8 +200,8 @@ myBibtexReaderandCheck <- function(file) {
 
 bibtexDBConsistencyCheck <- function(res, bib) {
     ## Check same bibtex entries in bibtex file and the mendely db
-    if(length(bib) != nrow(res))
-        stop("Different number of entries")
+    # if(length(bib) != nrow(res))
+        # stop("Different number of entries")
     sb <- sort(names(bib))
     sr <- sort(res$Ref_BibtexKey)
     if(!identical(sb, sr))
@@ -283,10 +283,17 @@ combineFields <- function(x, field1, field2, tokenize) {
     ## place info of fields1 and field2 in a single field1, and remove
     ## field2
     pf1 <- getAField(x, field1)
-    pf2 <- getAField(x, field2)
     f1 <- gsub(paste0("^", field1, " = \\{"), "", x[pf1])
+    while (length(pf1)>0 && length(grep("\\},$",f1))==0 && length(grep("\\}$",f1))==0) {
+      x <- x[-pf1]
+      f1 <- paste(f1, x[pf1], sep = "\n")
+    } # this will change the size of x
+    
+    # so extract pf2 after reading all f1
+    pf2 <- getAField(x, field2)
     f2 <- gsub(paste0("^", field2, " = \\{"), "", x[pf2])
-
+    # do not need to iterate f1, because "mendnotes" is one raw always (seems)
+    
     f1 <- gsub("\\},$", "", f1)
     f2 <- gsub("\\},$", "", f2)
 
@@ -343,6 +350,7 @@ addInfoToBibEntry <- function(x, y) {
     lnew <- lnew[which(!is.na(lnew))] ## I want the names of the vector
     ## Simpler if I leave until the end the one before last, because of
     ## the comma
+    # show(lnew)
     newx <- c(x[1:(ll - 2)],
               newBibItems(lnew),
               x[c(ll-1, ll)])
@@ -408,8 +416,19 @@ getFilesBib <- function(x) {
         ff <- gsub(cc, "", ff, fixed = TRUE)
     
     files <- strsplit(ff, ";")[[1]]
-    files <- vapply(files, function(x) gsub("^:", "/", x), "a")
-    files <- vapply(files, function(x) strsplit(x, ":")[[1]][1], "a")
+    # files <- vapply(files, function(x) gsub("^:", "/", x), "a")
+    # files <- vapply(files, function(x) strsplit(x, ":")[[1]][1], "a")
+    files <- vapply(files, function(x) gsub("^:", "", x), "a")
+    files <- vapply(files, function(x) gsub("\\$\\\\backslash\\$", "", x), "a")
+    files <- vapply(files, function(x) gsub(":pdf", "", x), "a")
+    files <- vapply(files, function(x) gsub(":docx", "", x), "a")
+    files <- vapply(files, function(x) gsub(":doc", "", x), "a")
+    files <- vapply(files, function(x) gsub(":pptx", "", x), "a")
+    files <- vapply(files, function(x) gsub(":ppt", "", x), "a")
+    files <- vapply(files, function(x) gsub(":caj", "", x), "a")
+    files <- vapply(files, function(x) gsub(":nh", "", x), "a")
+    files <- vapply(files, function(x) gsub(":kdh", "", x), "a")
+    files <- vapply(files, function(x) gsub(":tgz", "", x), "a")
     return(list(files = files, filepos = fpos))
 }
 
@@ -427,7 +446,7 @@ newFname <- function(bibtexkey, oldfilename, tmpdir, ranletters) {
                  paste(paste(sample(letters, ranletters,
                                     replace = TRUE)),
                        collapse = ""))
-    nn <- paste0(tmpdir, "/", nn)
+    nn <- paste0(tmpdir, "\\", nn)
     if(extension != "")
         return(paste0(nn, ".", extension))
     else
@@ -439,8 +458,10 @@ createNewFileField <- function(files, extensions) {
         stop("lengths file != extensions")
     head <- "file = {"
     fnopath <- vapply(files, justTheFile, "a")
-    fs <- paste0(fnopath, ":", files)
-    exts <- paste0(":", extensions)
+    # fs <- paste0(fnopath, ":", files)
+    fs <- fnopath
+    # exts <- paste0(":", extensions)
+    exts <- ""
     allfiles <- paste0(paste0(fs, exts), collapse = ";")
     return(paste0(head, allfiles, "}"))
 }
@@ -489,10 +510,11 @@ fixFilesSingleEntry <- function(bibentry,
             ## quote the path. But need to fix the \\& and \\_ that
             ## Mendeley inserted
             oldpath <- gsub("\\&", "&", filesp$files[nfile], fixed = TRUE)
-            oldpath <- gsub("\\_", "_", oldpath, fixed = TRUE)
+            oldpath <- gsub("{\\_}", "_", oldpath, fixed = TRUE)
+            oldpath <- gsub("/", "\\", oldpath, fixed= TRUE)
             ## oldpath <- gsubTheCrap(filesp$files[nfile])
             
-            if( (nchar(f1) > maxlength) || grepl("[^a-zA-Z0-9.-]", f1) ) {
+            if( TRUE || (nchar(f1) > maxlength) || grepl("[^a-zA-Z0-9.-]", f1) ) {
                 filesp$files[nfile] <- newFname(bibkey, f1,
                                                 tmpdir,
                                                 ranletters)
@@ -501,13 +523,15 @@ fixFilesSingleEntry <- function(bibentry,
                 ## screw things up. And I can't use system2 either, for
                 ## some reason I just don't follow but cannot pursue. This
                 ## whole spaces thing really sucks.
-                cmd <- system(paste("cp", shQuote(oldpath), 
-                       filesp$files[nfile]), intern = FALSE)
-                if(cmd) {
+                # cmd <- system("cmd.exe", input = paste("copy", shQuote(oldpath),
+                #        filesp$files[nfile]), intern = FALSE)
+                cmd <- file.copy(from = oldpath, to = filesp$files[nfile])
+                # readline(prompt="Press [enter] to continue")
+                if(cmd==FALSE) {
                     cat("\n Copying file failed for ", oldpath)
                     warning("\n Copying file failed for ", oldpath)
                 }
-            } 
+            }
         }
         ## if(newf) {
         
