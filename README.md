@@ -1,3 +1,10 @@
+# 简介
+在完成了很多修正后，终于在Windows平台上，把Mendeley中的数据（几乎全部），成功转移到了Zotero平台。
+很多原因导致最终放弃Mendeley，略过不谈，用过的人应该都有些自己的体会。
+## 修正的问题包括
+
+
+
 # Adios Mendeley #
 
 *Move from Mendeley to Zotero preserving notes, dates,
