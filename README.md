@@ -1,9 +1,31 @@
 # 简介
 在完成了很多修正后，终于在Windows平台上，把Mendeley中的数据（几乎全部），成功转移到了Zotero平台。
 很多原因导致最终放弃Mendeley，略过不谈，用过的人应该都有些自己的体会。
+1. 代码没有来得及整理和上传
+2. 没有做测试
 ## 修正的问题包括
+1. 读取Mendeley生成的bibtex文件时，原作者没有使用UTF-8，导致生成的new bibtex中存在中文乱码。
+2. 原作者没有考虑在Mendeley的note中存在多行的情况，这里合并会导致在bibtex的entry中产生多余的item，会导致读取错误
+3. 在提取原文件路径oddpath的时候，原程序已经不再合适现在Mendeley在Windows平台下的表现了，相应地做了调整。（估计Mendeley会持续变化下去……）
+1. Mendley中存在错误链接的情况，会导致输出的链接有误，打断导入到Zotero
+4. 在Win7平台下，改用file.copy复制文件到临时文件夹，不理解作者为什么使用system，在Win7下会导致无法验证文件是否成功导出
+5. 添加了除pdf外其实几种文件格式的判断，包括docx, doc, pptx, ppt, caj, nh, kdh, tgz。
+## 需要手动解决的恶心问题
+1. Mendely的命名中会出现包含生意符号的奇怪字符，会导致我复制时出错，所以在Mendely的自动命名中，先统一改成只使用时间命名，方便导出。
+1. Mendeley会生成`file = {::},`这样奇怪的entry，而且这条entry在Mendeley里是找不到的，是已经很早之前就删除掉的。用notepad++手动去除。
+2. Mendeley自动命名的文件，偶尔会出现大写的后缀就像`.PDF`，需要注意。
 
+## 未解决的问题
+1. 最终导致的new bibtex格式需要用notepad++转换为UTF-8。（由于操作很简单，懒得调代码了）
+2. 导入Mendeley的groups时不完整，不知道为什么
+3. 没有导入在pdf中的高亮。（以后打算用foxit直接在pdf上标准，再也不依赖Mendeley的reader了，现在才明白什么叫locked-in。
+4. 
 
+## 其它
+1. 为什么没有Zotero的开发者基于rdiaz02的工作制作一个Mendeley的导入器呢？这样势必会吸引很多Mendeley用户啊。
+------------------------
+------------------------
+------------------------
 
 # Adios Mendeley #
 
